@@ -15,7 +15,9 @@ import importlib
 import os
 import time
 import warnings
+import importlib
 from pathlib import Path
+from typing import List
 
 from django.conf import global_settings, ENVIRONMENT_VARIABLE
 from django.core.exceptions import ImproperlyConfigured
@@ -258,3 +260,21 @@ class UnionSettings(object):
 
     def __getattr__(self, item):
         return getattr(self, item)
+
+
+def get_class_map(path_list: List[str], cls: type) -> dict:
+    class_map = {}
+    class_map_value_list = []
+    path_list = set(path_list)
+    for path in path_list:
+        path_obj = importlib.import_module(path)
+        cls_list = [getattr(path_obj, i) for i in path_obj.__dict__]
+        cls_list = [i for i in cls_list if
+                    isinstance(i, type) and i != cls and issubclass(i, cls)]
+        class_map_value_list += cls_list
+    class_map_value_list = list(set(class_map_value_list))
+    for i in class_map_value_list:
+        if class_map.get(i.name):
+            raise Exception("错误！ {}类 和 {}类 指向的VIP名一致".format(i.__name__, class_map[i.name].__name__))
+        class_map[i.name] = i
+    return class_map

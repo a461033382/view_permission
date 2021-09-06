@@ -3,6 +3,8 @@ from django.utils.translation import gettext_lazy as _
 from django.db.models.manager import Manager
 from view_permission.conf import settings
 
+from django.contrib.auth.models import AbstractUser
+
 
 # Create your models here.
 
@@ -62,6 +64,9 @@ class PermissionModel(models.Model):
     name = models.CharField(max_length=100, verbose_name='权限名')
     view = models.ForeignKey(to=ViewModel, on_delete=models.DO_NOTHING, to_field="id")
     param_json = models.TextField(verbose_name="参数限制")
+    req_info = models.TextField(verbose_name="传入参数", default=None)
+    need_login = models.BooleanField(default=False, verbose_name="是否需要登录")
+    is_allow = models.BooleanField(default=True, verbose_name="是否允许请求")
     call_limit = models.IntegerField(default=-1, verbose_name="请求次数上限")
 
     objects = Manager()
@@ -92,3 +97,22 @@ class UserGroup(models.Model):
 
     def __str__(self):
         return self.name
+
+
+def get_base_vip():
+    from view_permission.base.vip import BaseUser
+    return BaseUser.get_model().id
+
+
+class VPUserBaseModel(AbstractUser):
+    view_group = models.ForeignKey(
+        to=UserGroup, verbose_name="视图权限组", on_delete=models.SET_DEFAULT,
+        null=True, blank=True,
+        db_column=settings.USER_TO_GROUP_FIELD_NAME,
+        default=get_base_vip
+    )
+
+    class Meta:
+        verbose_name = "VP用户表"
+        verbose_name_plural = "VP用户表"
+        abstract = True

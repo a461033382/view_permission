@@ -93,8 +93,11 @@ class LimitJsonObj(object):
         return obj
 
     def to_df(self):
-        d1 = ["param_name", "symbol", "value"
-              ]
+        d1 = [
+            "param_name",
+            "symbol",
+            "value"
+        ]
         df = pd.DataFrame(columns=d1)
         for i in range(len(self.param_list)):
             df.loc[i] = [self.param_list[i].param_name, self.param_list[i].symbol.chinese_name,
@@ -120,6 +123,34 @@ class LimitJsonObj(object):
 
     def __str__(self):
         return self.json_dumps()
+
+
+class ReqInfoJsonObj(object):
+
+    def __init__(self, **kwargs):
+        self.req_info = dict(**kwargs)
+
+    @classmethod
+    def from_json_str(cls, json_str):
+        try:
+            json_obj = json.loads(json_str)  # type:dict
+        except json.decoder.JSONDecodeError as e:
+            json_obj = json.loads("{}")
+        return ReqInfoJsonObj(**json_obj)
+
+    def to_json_str(self):
+        return json.dumps(self.req_info)
+
+    def add(self, param_name, value):
+        self.req_info[param_name] = value
+
+    def to_df(self):
+        d1 = ["param_name", "value"
+              ]
+        df = pd.DataFrame(columns=d1)
+        for num, key in zip(range(len(self.req_info)), self.req_info.keys()):
+            df.loc[num] = [key, self.req_info[key]]
+        return df
 
 
 class Permission(object):

@@ -59,7 +59,9 @@ class View(object):
             view_url = view_url_dict.get(view_str)
             if not view_url:
                 continue
-            method_list = [i.lower() for i in view_obj.view_class.http_method_names]
+            http_method_names = set(view_obj.view_class.http_method_names) & set(
+                [i.lower() for i in settings.HTTP_METHOD_NAMES])
+            method_list = set(i.lower() for i in http_method_names)
             allowed_method_list = [i.lower() for i in ViewModel.request_method_dict.values()]
             method_list = [i for i in method_list if i in allowed_method_list]
             try:
@@ -132,8 +134,6 @@ class Permission(object):
                     Permission._create_default_permission(view_obj)
         except Exception as e:
             raise Exception("更新默认权限失败")
-
-    pass
 
 
 if __name__ == '__main__':
