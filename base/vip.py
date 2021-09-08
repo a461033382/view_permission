@@ -6,18 +6,19 @@
 # @Software: PyCharm
 
 from view_permission.permissions.vip import VipBaseClass
+from view_permission.conf import settings
 
 
 class NonLogin(VipBaseClass):
-    name = "NON_LOGIN"
+    name = settings.NON_LOGIN_NAME
 
 
 class BaseUser(VipBaseClass):
-    name = "BASE_USER"
+    name = settings.BASE_VIP_NAME
 
 
 class SuperUser(VipBaseClass):
-    name = "SUPER_USER"
+    name = settings.SUPER_USER_NAME
 
     def get_model(self):
         return True

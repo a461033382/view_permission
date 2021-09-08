@@ -26,10 +26,11 @@ class View(object):
         urlconf = __import__(settings.ROOT_URLCONF, {}, {}, [''])
         url_patterns = urlconf.urlpatterns  # type:list
         for i in url_patterns:
-            if i.app_name not in settings.BASE_EXCLUDE_APP_NAMES + settings.EXCLUDE_APP_NAMES:
-                for v in i.reverse_dict.keys():
-                    if hasattr(v, "view_class"):
-                        apps_dict["{}.{}".format(v.view_class.__module__, v.__name__)] = v
+            if isinstance(i, URLResolver):
+                if i.app_name not in settings.BASE_EXCLUDE_APP_NAMES + settings.EXCLUDE_APP_NAMES:
+                    for v in i.reverse_dict.keys():
+                        if hasattr(v, "view_class"):
+                            apps_dict["{}.{}".format(v.view_class.__module__, v.__name__)] = v
         return apps_dict
 
     @staticmethod
@@ -87,6 +88,7 @@ class View(object):
                                 url=view_url,
                                 method=method_num
                             )
+                            print("新增View：{}".format(view_model_obj.name))
                         view_model_obj.save()
             except Exception as e:
                 raise Exception("更新view失败！ 错误原因：{}".format(e.args))

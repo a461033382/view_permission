@@ -262,19 +262,28 @@ class UnionSettings(object):
         return getattr(self, item)
 
 
-def get_class_map(path_list: List[str], cls: type) -> dict:
-    class_map = {}
-    class_map_value_list = []
-    path_list = set(path_list)
-    for path in path_list:
-        path_obj = importlib.import_module(path)
-        cls_list = [getattr(path_obj, i) for i in path_obj.__dict__]
-        cls_list = [i for i in cls_list if
-                    isinstance(i, type) and i != cls and issubclass(i, cls)]
-        class_map_value_list += cls_list
-    class_map_value_list = list(set(class_map_value_list))
-    for i in class_map_value_list:
-        if class_map.get(i.name):
-            raise Exception("错误！ {}类 和 {}类 指向的VIP名一致".format(i.__name__, class_map[i.name].__name__))
-        class_map[i.name] = i
-    return class_map
+class MapClass(object):
+    name = None
+
+    @classmethod
+    def get_class_map(cls: type, path_list: List[str]) -> dict:
+        """
+        可以在 path_list 中获取该类的所有子类
+        :param path_list:确保里面的所有的字符串都能通过 importlib.import_module(str) 导包
+        :return:{sub_cls.name:sub_cls}
+        """
+        class_map = {}
+        class_map_value_list = []
+        path_list = set(path_list)
+        for path in path_list:
+            path_obj = importlib.import_module(path)
+            cls_list = [getattr(path_obj, i) for i in path_obj.__dict__]
+            cls_list = [i for i in cls_list if
+                        isinstance(i, type) and i != cls and issubclass(i, cls)]
+            class_map_value_list += cls_list
+        class_map_value_list = list(set(class_map_value_list))
+        for i in class_map_value_list:
+            if class_map.get(i.name):
+                raise Exception("错误！ {}类 和 {}类 指向的 name 一致".format(i.__name__, class_map[i.name].__name__))
+            class_map[i.name] = i
+        return class_map

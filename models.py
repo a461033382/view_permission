@@ -87,6 +87,8 @@ class UserGroup(models.Model):
         verbose_name='视图权限',
         blank=True,
     )
+    contain = models.ForeignKey(to="self", null=True, on_delete=models.SET_NULL, verbose_name="完全包含的VIP组",
+                                )
 
     objects = Manager()
 
@@ -95,13 +97,26 @@ class UserGroup(models.Model):
         verbose_name_plural = "权限组"
         db_table = settings.GROUP_MODEL_NAME
 
+    def get_contain_group_list(self, group_list=None):
+        if not group_list:
+            group_list = []
+        if not self.contain:
+            return group_list
+        if self.contain in group_list:
+            return group_list
+        group_list.append(self.contain)
+        return self.contain.get_contain_group_list(group_list)
+
     def __str__(self):
         return self.name
 
 
 def get_base_vip():
     from view_permission.base.vip import BaseUser
-    return BaseUser.get_model().id
+    try:
+        return BaseUser.get_model().id
+    except Exception as e:
+        return None
 
 
 class VPUserBaseModel(AbstractUser):

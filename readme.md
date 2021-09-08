@@ -91,7 +91,7 @@ USER_TO_GROUP_FIELD_NAME = "view_group"  # 用户表中的权限外键名
 #### app_setting
 
 ```python
-EXCLUDE_APP_NAMES = []	# 在执行 python manage.py vpinit 的时候b
+EXCLUDE_APP_NAMES = []	# 在执行 python manage.py vpinit 的时候
 ```
 
 

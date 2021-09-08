@@ -23,6 +23,7 @@ start_django(*sys.argv[1:3])
 from view_permission.permissions.permission import LimitJsonObj, ReqInfoJsonObj
 from view_permission.permissions.symbol import SymbolMap
 from view_permission.models import PermissionModel, UserGroup, ViewModel
+from view_permission.permissions.vp_type import VPType
 
 
 class BaseStreamLit(object):
@@ -122,9 +123,11 @@ class Test(BaseStreamLit):
             st.write("添加变量")
             param_name = st.text_input(label="变量名")
             value = st.text_input(label="值")
+            vp_type = st.selectbox(label="数据类型", options=[i.name for i in VPType.get_class_map().values()],
+                                   )
             add_button = st.form_submit_button("添加")
             if add_button:
-                self.add_req_info(param_name=param_name, value=value)
+                self.add_req_info(param_name=param_name, value=value, vp_type=vp_type)
                 st.experimental_rerun()
 
         with st.sidebar.form("delete_req_info"):
@@ -161,9 +164,14 @@ class Test(BaseStreamLit):
         self.permission_obj.param_json = limit_obj.__str__()
         self.permission_obj.save()
 
-    def add_req_info(self, param_name, value):
+    def add_req_info(self, param_name, value, vp_type: str):
+        vp_type = VPType.get_class_map()[vp_type]  # type:VPType.__class__
         req_info = ReqInfoJsonObj.from_json_str(self.permission_obj.req_info)
-        req_info.add(param_name, value)
+        real_value = vp_type(value)
+        if real_value != value or not real_value:
+            req_info.add(param_name, real_value)
+        else:
+            st.error("添加失败：值不符合数据类型的规范")
         self.permission_obj.req_info = req_info.to_json_str()
         self.permission_obj.save()
 

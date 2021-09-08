@@ -12,7 +12,7 @@ class Command(BaseCommand):
     help = '初始化权限'
 
     def handle(self, *args, **options):
-        from view_permission.permissions.view import View, Permission
+        from view_permission.permissions.view import View
         res = View.main()
         if res:
             self.stdout.write("Success!")

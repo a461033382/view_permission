@@ -15,7 +15,7 @@ VIEW_PERMISSION_APP_PATH = os.path.dirname(__file__)
 GROUP_MODEL_NAME = "vp_groups"
 PERMISSION_MODEL_NAME = "vp_permissions"
 VIEW_MODEL_NAME = "vp_views"
-USER_TO_GROUP_FIELD_NAME = "view_group"  # 用户表中的权限外键名
+USER_TO_GROUP_FIELD_NAME = "view_group_id"  # 用户表中的权限外键名
 
 #####################
 #   APP_SETTING     #
@@ -37,6 +37,11 @@ BASE_VIP_DIR = [
 ]
 
 VIP_DIR = []
+
+# 默认VIP名
+NON_LOGIN_NAME = "NON_LOGIN"
+BASE_VIP_NAME = "BASE_NAME"
+SUPER_USER_NAME = "SUPER_USER"
 
 #####################
 #   VIEW_SETTING    #

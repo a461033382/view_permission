@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from django.http.response import HttpResponse, JsonResponse
 from django.contrib.auth.models import AnonymousUser
 from view_permission.models import UserGroup, PermissionModel, ViewModel
-from view_permission.permissions.permission import LimitJsonObj, ParamJsonObj, ReqInfoJsonObj
+from view_permission.permissions.permission import LimitJsonObj, LimitParamObj, ReqInfoJsonObj
 from apps.user.models import UserModel
 from view_permission.models import VPUserBaseModel
 from view_permission.base.vip import NonLogin, BaseUser, SuperUser
@@ -54,7 +54,8 @@ class PermissionParamMiddleware(MiddlewareMixin):
         if hasattr(request, "user"):
             user = request.user  # type:VPUserBaseModel
             if user.is_superuser:
-                return SuperUser()
+                return BaseUser()  # TODO: 测试用
+                # return SuperUser()
             if not isinstance(user, VPUserBaseModel):
                 return NonLogin()
             return (get_vip_map().get(user.view_group.name) or BaseUser)()

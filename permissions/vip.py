@@ -7,12 +7,12 @@
 
 from view_permission.models import UserGroup
 from view_permission.conf import settings
+from view_permission.base.utils import MapClass
 from typing import List
 import importlib
 
 
-class VipBaseClass(object):
-    name = None
+class VipBaseClass(MapClass):
 
     @classmethod
     def get_model(cls):
@@ -68,3 +68,6 @@ def get_vip_map() -> dict:
 
 
 VipMap = get_vip_map()
+
+if __name__ == '__main__':
+    a = VipBaseClass.get_class_map(settings.BASE_VIP_DIR)
