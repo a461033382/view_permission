@@ -137,6 +137,11 @@ class VipUpdateError(ResponseError):
     default_code = 460
 
 
+class CallLimitError(ResponseError):
+    default_detail = "访问次数超过限制"
+    default_code = 442
+
+
 class ErrorSelector:
     E400 = ResponseError  # 未知错误
     E401 = ParamMissingError  # 缺少参数
@@ -151,6 +156,7 @@ class ErrorSelector:
     E410 = UserLoginInfoError  # 登录信息错误
     E440 = UserBannedError  # 用户被封禁
     E441 = UserPermissionError  # 用户无权限
+    E442 = CallLimitError  # 访问次数超过限制
     E451 = CaptchaOverTimeError  # 验证码超时
     E460 = VipUpdateError  # 无效的充值选项
     E501 = MessageSendError  # 短信验证码发送失败

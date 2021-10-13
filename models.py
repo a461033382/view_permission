@@ -4,6 +4,7 @@ from django.db.models.manager import Manager
 from view_permission.conf import settings
 
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.apps import get_user_model
 
 
 # Create your models here.
@@ -63,8 +64,8 @@ class ViewModel(models.Model):
 class PermissionModel(models.Model):
     name = models.CharField(max_length=100, verbose_name='权限名')
     view = models.ForeignKey(to=ViewModel, on_delete=models.DO_NOTHING, to_field="id")
-    param_json = models.TextField(verbose_name="参数限制")
-    req_info = models.TextField(verbose_name="传入参数", default=None)
+    param_json = models.TextField(verbose_name="参数限制", default="{}", null=True, blank=True)
+    req_info = models.TextField(verbose_name="传入参数", default="{}", null=True, blank=True)
     need_login = models.BooleanField(default=False, verbose_name="是否需要登录")
     is_allow = models.BooleanField(default=True, verbose_name="是否允许请求")
     call_limit = models.IntegerField(default=-1, verbose_name="请求次数上限")
@@ -131,3 +132,31 @@ class VPUserBaseModel(AbstractUser):
         verbose_name = "VP用户表"
         verbose_name_plural = "VP用户表"
         abstract = True
+
+
+class UserViewCountModel(models.Model):
+    user_id = models.IntegerField()
+    view = models.ForeignKey(to=ViewModel, on_delete=models.CASCADE)
+    call_time = models.IntegerField(default=0)
+
+    class Meta:
+        verbose_name = "视图请求计数表"
+        verbose_name_plural = "视图请求计数表"
+        db_table = settings.USER_VIEW_COUNT_MODEL_NAME
+
+    @classmethod
+    def get_call_time(cls, user: VPUserBaseModel, view: ViewModel):
+        instance = cls.objects.filter(user_id=user.id, view=view).first()  # type:UserViewCountModel
+        if not instance:
+            return 0
+        return instance.call_time
+
+    @classmethod
+    def add_call_time(cls, user: VPUserBaseModel, view: ViewModel):
+        instance = cls.objects.filter(user_id=user.id, view=view).first()  # type:UserViewCountModel
+        if not instance:
+            instance = cls.objects.create(user_id=user.id, view=view)
+        instance.call_time += 1
+        instance.save()
+
+

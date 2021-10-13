@@ -14,8 +14,11 @@ VIEW_PERMISSION_APP_PATH = os.path.dirname(__file__)
 
 GROUP_MODEL_NAME = "vp_groups"
 PERMISSION_MODEL_NAME = "vp_permissions"
+USER_VIEW_COUNT_MODEL_NAME = "vp_user_call_count"
 VIEW_MODEL_NAME = "vp_views"
-USER_TO_GROUP_FIELD_NAME = "view_group_id"  # 用户表中的权限外键名
+USER_TO_GROUP_FIELD_NAME = "view_group"  # 用户表中的权限外键名
+VIEW_FIELD_NAME = "view"
+USER_FIELD_NAME = "user"
 
 #####################
 #   APP_SETTING     #
