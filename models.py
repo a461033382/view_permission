@@ -6,6 +6,11 @@ from view_permission.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.apps import get_user_model
 
+from django.db import connection
+
+from typing import List
+import json
+
 
 # Create your models here.
 
@@ -160,3 +165,87 @@ class UserViewCountModel(models.Model):
         instance.save()
 
 
+class VPCacheModel(models.Model):
+    key = models.CharField(max_length=128)
+    value = models.TextField()
+
+    class Meta:
+        db_table = 'vp_cache'
+
+    @classmethod
+    def get_all_cache(cls):
+        res = {}
+        all_data = cls.objects.all()  # type:List[VPCacheModel]
+        for each in all_data:
+            res[each.key] = each.value_decode()
+        return res
+
+    @classmethod
+    def get_cache_by_key(cls, key: str):
+        query = cls.objects.filter(key=key).first()  # type:VPCacheModel
+        if not query:
+            return None
+        return query.value_decode()
+
+    @classmethod
+    def add_cache(cls, key: str, value, auto_update: bool = False):
+
+        if not isinstance(key, str):
+            raise TypeError("错误！ key 必须为 str 类型，接受到 {} 类型".format(type(key).__name__))
+
+        if len(key) > 127:
+            raise Exception("错误！ key 字段长度不应超过127个字符，key:{}".format(key))
+
+        query = cls.objects.filter(key=key).first()
+        if query:
+            if not auto_update:
+                raise Exception("新增 Cache 失败！数据库中出现同名 key：{}".format(key))
+            return cls.update_cache(key=key, value=value)
+
+        try:
+            json_value = json.dumps(value)
+        except Exception as e:
+            raise Exception("value 转Json 失败！key：{}，错误信息：{}".format(key, e))
+        cls.objects.create(key=key, value=json_value)
+
+    @classmethod
+    def update_cache(cls, key: str, value):
+        if not isinstance(key, str):
+            raise TypeError("错误！ key 必须为 str 类型，接受到 {} 类型".format(type(key).__name__))
+
+        if len(key) > 127:
+            raise Exception("错误！ key 字段长度不应超过127个字符，key:{}".format(key))
+
+        query = cls.objects.filter(key=key).first()  # type:VPCacheModel
+        if not query:
+            raise Exception("更新 Cache 失败！数据库中未找到 key：{}".format(key))
+        try:
+            json_value = json.dumps(value)
+        except Exception as e:
+            raise Exception("value 转Json 失败！key：{}，错误信息：{}".format(key, e))
+        query.value = json_value
+        query.save()
+        return True
+
+    @classmethod
+    def remove_all_cache(cls):
+        cursor = connection.cursor()
+        cursor.execute("TRUNCATE TABLE `{}`".format(cls._meta.db_table))
+        return True
+
+    @classmethod
+    def remove_cache(cls, key: str):
+        if not isinstance(key, str):
+            raise TypeError("错误！ key 必须为 str 类型，接受到 {} 类型".format(type(key).__name__))
+        query = cls.objects.filter(key=key)  # type:VPCacheModel
+        if not query:
+            return False
+        query.delete()
+
+    def value_decode(self):
+        value = self.value
+        try:
+            res = json.loads(value)
+        except Exception as e:
+            raise Exception("Cache信息解析失败！key：{}，错误信息：{}".format(self.key, e))
+        return res

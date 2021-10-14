@@ -99,6 +99,7 @@ class PermissionCountMiddleware(MiddlewareMixin):
             return (get_vip_map().get(user.view_group.name) or BaseUser)()
 
     def reset_check(self):
+
         pass
 
     pass
