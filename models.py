@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.db.models.manager import Manager
 from view_permission.conf import settings
+from view_permission.base.utils import JsonEncodeClass
 
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.apps import get_user_model
@@ -164,6 +165,12 @@ class UserViewCountModel(models.Model):
         instance.call_time += 1
         instance.save()
 
+    @classmethod
+    def reset(cls):
+        cursor = connection.cursor()
+        cursor.execute("TRUNCATE TABLE `{}`".format(cls._meta.db_table))
+        return True
+
 
 class VPCacheModel(models.Model):
     key = models.CharField(max_length=128)
@@ -188,7 +195,7 @@ class VPCacheModel(models.Model):
         return query.value_decode()
 
     @classmethod
-    def add_cache(cls, key: str, value, auto_update: bool = False):
+    def add_cache(cls, key: str, value, auto_update: bool = True):
 
         if not isinstance(key, str):
             raise TypeError("错误！ key 必须为 str 类型，接受到 {} 类型".format(type(key).__name__))
@@ -203,7 +210,7 @@ class VPCacheModel(models.Model):
             return cls.update_cache(key=key, value=value)
 
         try:
-            json_value = json.dumps(value)
+            json_value = json.dumps(value, cls=JsonEncodeClass)
         except Exception as e:
             raise Exception("value 转Json 失败！key：{}，错误信息：{}".format(key, e))
         cls.objects.create(key=key, value=json_value)
@@ -220,7 +227,7 @@ class VPCacheModel(models.Model):
         if not query:
             raise Exception("更新 Cache 失败！数据库中未找到 key：{}".format(key))
         try:
-            json_value = json.dumps(value)
+            json_value = json.dumps(value, cls=JsonEncodeClass)
         except Exception as e:
             raise Exception("value 转Json 失败！key：{}，错误信息：{}".format(key, e))
         query.value = json_value

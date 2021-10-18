@@ -51,3 +51,10 @@ SUPER_USER_NAME = "SUPER_USER"
 #####################
 
 HTTP_METHOD_NAMES = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace']
+
+#####################
+#    CALL_LIMIT     #
+#####################
+
+CALL_LIMIT_CRON = "0 0 * * *"  # 默认为一天0点刷新一次
+NEXT_RESET_TIME_CACHE_KEY = "next_reset_time"

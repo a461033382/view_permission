@@ -9,21 +9,13 @@ import datetime
 from dateutil.relativedelta import relativedelta
 from importlib import import_module
 from django.conf import settings
-from django.conf import Settings
 
+import json
 import importlib
-import os
-import time
-import warnings
-import importlib
-from pathlib import Path
 from typing import List
 
 from django.conf import global_settings, ENVIRONMENT_VARIABLE
 from django.core.exceptions import ImproperlyConfigured
-from django.utils.deprecation import (
-    RemovedInDjango30Warning, RemovedInDjango31Warning,
-)
 import os
 
 
@@ -80,6 +72,14 @@ class Utils:
         try:
             res = datetime.datetime.strptime(s, format)
             res = res.date()
+        except Exception as e:
+            return False
+        return res
+
+    @staticmethod
+    def is_datetime(s: str, format: str = "%Y-%m-%d %H:%M:%S"):
+        try:
+            res = datetime.datetime.strptime(s, format)
         except Exception as e:
             return False
         return res
@@ -260,6 +260,16 @@ class UnionSettings(object):
 
     def __getattr__(self, item):
         return getattr(self, item)
+
+
+class JsonEncodeClass(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, datetime.datetime):
+            return o.strftime('%Y-%m-%d %H:%M:%S')
+        elif isinstance(o, datetime.date):
+            return o.strftime('%Y-%m-%d')
+        else:
+            super().default(self, o)
 
 
 def get_class_map(path_list: List[str], cls: type) -> dict:

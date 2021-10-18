@@ -6,21 +6,24 @@
 # @Software: PyCharm
 
 from django.utils.deprecation import MiddlewareMixin
-from django.middleware.common import CommonMiddleware
-from django.middleware.csrf import CsrfViewMiddleware
 from django.core.handlers.wsgi import WSGIRequest
-from rest_framework.response import Response
-from django.http.response import HttpResponse, JsonResponse
-from django.contrib.auth.models import AnonymousUser
-from view_permission.models import UserGroup, PermissionModel, ViewModel, UserViewCountModel, VPUserBaseModel
+from view_permission.models import (UserGroup,
+                                    PermissionModel,
+                                    ViewModel,
+                                    UserViewCountModel,
+                                    VPUserBaseModel,
+                                    VPCacheModel)
 from view_permission.permissions.permission import LimitJsonObj, ParamJsonObj, ReqInfoJsonObj
-from apps.user.models import UserModel
 from view_permission.base.vip import NonLogin, BaseUser, SuperUser
 from view_permission.base.response_error import *
 from view_permission.base.response_error import UserPermissionError
 from view_permission.permissions.vip import get_vip_map
+from view_permission.conf import settings
+from view_permission.base.utils import Utils
 
 from typing import List
+from croniter import croniter
+from datetime import datetime
 
 
 class PermissionParamMiddleware(MiddlewareMixin):
@@ -65,6 +68,9 @@ class PermissionCountMiddleware(MiddlewareMixin):
         pass
 
     def process_view(self, request: WSGIRequest, callback, callback_args, callback_kwargs):
+
+        self.reset_check()
+
         user = getattr(request, "user")
         user_group = self.get_group(request)
         view_name = request.resolver_match.view_name  # type:str
@@ -99,7 +105,10 @@ class PermissionCountMiddleware(MiddlewareMixin):
             return (get_vip_map().get(user.view_group.name) or BaseUser)()
 
     def reset_check(self):
-
-        pass
-
-    pass
+        reset_time = VPCacheModel.get_cache_by_key(settings.NEXT_RESET_TIME_CACHE_KEY)
+        reset_time = Utils.is_datetime(reset_time)
+        if not reset_time or datetime.now() > reset_time:
+            UserViewCountModel.reset()
+            next_time = croniter(settings.CALL_LIMIT_CRON).next(datetime)
+            VPCacheModel.add_cache(key=settings.NEXT_RESET_TIME_CACHE_KEY,
+                                   value=next_time, auto_update=True)
