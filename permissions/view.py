@@ -26,6 +26,8 @@ class View(object):
         urlconf = __import__(settings.ROOT_URLCONF, {}, {}, [''])
         url_patterns = urlconf.urlpatterns  # type:list
         for i in url_patterns:
+            if not isinstance(i, URLResolver):
+                continue
             if i.app_name not in settings.BASE_EXCLUDE_APP_NAMES + settings.EXCLUDE_APP_NAMES:
                 for v in i.reverse_dict.keys():
                     if hasattr(v, "view_class"):
